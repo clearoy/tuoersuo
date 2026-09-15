@@ -1,67 +1,42 @@
-"""Step 2: read the digit off every Tile via Baidu Cloud's OCR API."""
+"""Step 2: read the whole board's digit grid in a single Gemini call.
 
-import base64
-import concurrent.futures
-import io
+One multimodal call replaces the old per-tile loop entirely - no tile images needed.
+"""
+
 import json
-import urllib.parse
 
-import requests
-from PIL import Image
+from google import genai
+from google.genai import types
 
-from src.pipeline.capture import Tile
-
-
-class OCRClient:
-    def __init__(self, api_key: str, secret_key: str):
-        if not api_key or not secret_key:
-            raise ValueError("Baidu OCR API key/secret key are not configured")
-        self.api_key = api_key
-        self.secret_key = secret_key
-        self.url = (
-            "https://aip.baidubce.com/rest/2.0/ocr/v1/numbers?access_token="
-            + self._get_access_token()
-        )
-        self.headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "Accept": "application/json",
-        }
-
-    def _get_access_token(self) -> str:
-        url = "https://aip.baidubce.com/oauth/2.0/token"
-        params = {
-            "grant_type": "client_credentials",
-            "client_id": self.api_key,
-            "client_secret": self.secret_key,
-        }
-        return str(requests.post(url, params=params).json().get("access_token"))
-
-    @staticmethod
-    def _image_to_base64(image: Image.Image, urlencoded: bool = False, fmt: str = "PNG") -> str:
-        buffer = io.BytesIO()
-        image.save(buffer, format=fmt)
-        encoded = base64.b64encode(buffer.getvalue()).decode("utf8")
-        return urllib.parse.quote_plus(encoded) if urlencoded else encoded
-
-    def recognize_digit(self, image: Image.Image) -> int:
-        payload = (
-            "image=" + self._image_to_base64(image, urlencoded=True)
-            + "&recognize_granularity=big&detect_direction=false"
-        )
-        response = requests.post(self.url, data=payload, headers=self.headers)
-        data = json.loads(response.text)
-        return int(data["words_result"][0]["words"])
+_PROMPT_TEMPLATE = (
+    "This image shows a {rows}x{cols} grid of numbered tiles from a puzzle game. "
+    "Read it top-to-bottom, left-to-right. Each cell contains a single digit 1-9. "
+    "Return ONLY a JSON array of exactly {count} integers, one per cell, in row-major "
+    "order (all of row 1 left-to-right, then all of row 2, and so on). No other text."
+)
 
 
-def recognize_all(tiles: list[Tile], ocr: OCRClient, thread_count: int) -> list:
-    digits = [0] * len(tiles)
+def recognize_board(image_path: str, rows: int, cols: int, api_key: str, model: str) -> list:
+    if not api_key:
+        raise ValueError("Gemini API key is not configured")
 
-    def recognize(tile: Tile) -> None:
-        digits[tile.tile_id] = ocr.recognize_digit(tile.image)
+    client = genai.Client(api_key=api_key)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
-        futures = {executor.submit(recognize, tile): tile for tile in tiles}
-        for future in concurrent.futures.as_completed(futures):
-            future.result()
+    with open(image_path, "rb") as f:
+        image_bytes = f.read()
 
-    return digits
+    prompt = _PROMPT_TEMPLATE.format(rows=rows, cols=cols, count=rows * cols)
+
+    response = client.models.generate_content(
+        model=model,
+        contents=[
+            types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
+            prompt,
+        ],
+        config=types.GenerateContentConfig(response_mime_type="application/json"),
+    )
+
+    digits = json.loads(response.text)
+    if len(digits) != rows * cols:
+        raise ValueError(f"Gemini returned {len(digits)} digits, expected {rows * cols}")
+    return [int(d) for d in digits]

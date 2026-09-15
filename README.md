@@ -6,11 +6,13 @@
 
 ```
 src/
-  config.py           settings (window title, board size, OCR keys via .env)
+  config.py           settings (window title, board size, Gemini key/model via .env)
   run.py              assembles the four pipeline steps into capture -> OCR -> solve loop -> play
   pipeline/
-    capture.py        finds the game window, screenshots + crops + slices it into Tiles
-    ocr.py             Baidu OCR wrapper, reads every Tile's digit
+    capture.py        finds the game window, screenshots + crops it, computes each cell's
+                        pixel position (no per-tile image cropping - see below)
+    ocr.py             sends the whole board image to Gemini in one call, gets back the
+                        full digit grid as JSON
     solve.py            Board (digit grid + queries) + Solver interface + Move;
                         GreedySolver is the current strategy
     execute.py          turns a Move into a real click+drag on the game window
@@ -18,11 +20,15 @@ tests/                solve.py tests that don't need the real game running
 main.py               entry point
 ```
 
+Digit recognition reads the entire board in a single Gemini call instead of OCR-ing 160
+individual tile crops, so `capture.py` only computes cell *geometry* (used later by
+`execute.py` for click targeting) - it no longer crops/inverts/saves per-tile images.
+
 ## Setup
 
 ```bash
 pip install -r requirements.txt
-cp .env.example .env   # fill in BAIDU_API_KEY / BAIDU_SECRET_KEY
+cp .env.example .env   # fill in GEMINI_API_KEY (get one at https://aistudio.google.com/apikey)
 ```
 
 On macOS, `pyautogui`'s screenshot/mouse control requires granting your terminal

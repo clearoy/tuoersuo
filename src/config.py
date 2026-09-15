@@ -1,4 +1,4 @@
-"""Central place for all tunables: window title, board size, OCR credentials, threading."""
+"""Central place for all tunables: window title, board size, OCR credentials."""
 
 import os
 from dataclasses import dataclass
@@ -17,10 +17,8 @@ class Config:
     rows: int = 16
     cols: int = 10
     capture_crop_percent: float = 0.85
-    ocr_thread_count: int = 3
-    save_tile_images: bool = False
-    baidu_api_key: str = os.environ.get("BAIDU_API_KEY", "")
-    baidu_secret_key: str = os.environ.get("BAIDU_SECRET_KEY", "")
+    gemini_api_key: str = os.environ.get("GEMINI_API_KEY", "")
+    gemini_model: str = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 DEFAULT_CONFIG = Config()

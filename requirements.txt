@@ -1,6 +1,6 @@
 pyautogui
 pygetwindow
 Pillow
-requests
+google-genai
 python-dotenv
 pytest
