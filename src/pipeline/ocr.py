@@ -1,12 +1,15 @@
-"""Thin wrapper around Baidu Cloud's digit-recognition OCR API."""
+"""Step 2: read the digit off every Tile via Baidu Cloud's OCR API."""
 
 import base64
+import concurrent.futures
 import io
 import json
 import urllib.parse
 
 import requests
 from PIL import Image
+
+from src.pipeline.capture import Tile
 
 
 class OCRClient:
@@ -48,3 +51,17 @@ class OCRClient:
         response = requests.post(self.url, data=payload, headers=self.headers)
         data = json.loads(response.text)
         return int(data["words_result"][0]["words"])
+
+
+def recognize_all(tiles: list[Tile], ocr: OCRClient, thread_count: int) -> list:
+    digits = [0] * len(tiles)
+
+    def recognize(tile: Tile) -> None:
+        digits[tile.tile_id] = ocr.recognize_digit(tile.image)
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=thread_count) as executor:
+        futures = {executor.submit(recognize, tile): tile for tile in tiles}
+        for future in concurrent.futures.as_completed(futures):
+            future.result()
+
+    return digits

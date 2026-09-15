@@ -1,5 +1,5 @@
 from src.config import DEFAULT_CONFIG
-from src.pipeline import run
+from src.run import run
 
 if __name__ == "__main__":
     score = run(DEFAULT_CONFIG)
