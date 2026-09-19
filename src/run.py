@@ -2,7 +2,7 @@
 
 from src.config import Config
 from src.pipeline import capture, execute, ocr
-from src.pipeline.solve import Board, Solver, GreedySolver
+from src.pipeline.solve import Board, Solver, make_solver
 
 
 def read_board(config: Config) -> tuple:
@@ -43,7 +43,7 @@ def play(board: Board, tiles: list, geometry, config: Config, solver: Solver) ->
 
 
 def run(config: Config, solver: Solver = None) -> int:
-    solver = solver or GreedySolver()
+    solver = solver or make_solver(config.solver, config.beam_width, config.beam_branching)
     board, tiles, geometry = read_board(config)
     board.show()
     return play(board, tiles, geometry, config, solver)

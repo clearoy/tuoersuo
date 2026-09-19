@@ -36,7 +36,13 @@ class Config:
     board_begin_position: tuple = tuple(_CALIBRATION.get("board_begin_position", (26, 15)))
     board_end_margin: tuple = tuple(_CALIBRATION.get("board_end_margin", (57, 15)))
     gemini_api_key: str = os.environ.get("GEMINI_API_KEY", "")
-    gemini_model: str = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+    gemini_model: str = os.environ.get("GEMINI_MODEL", "gemini-3.6-flash")
+
+    # Which solver plays: "greedy", "smallest" or "beam" (see src/pipeline/solve.py).
+    # Larger beam_width / beam_branching plan better but take longer before the first move.
+    solver: str = os.environ.get("SOLVER", "beam")
+    beam_width: int = 20
+    beam_branching: int = 6
 
     # Mouse timing: the mini-program's webview needs real time between move/click/drag
     # to register input reliably. Increase these if moves still get missed.

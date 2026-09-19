@@ -49,6 +49,15 @@ Re-run `prerun.py` whenever the game window's size or position changes.
 pytest
 ```
 
+## Choosing a solver
+
+Set `SOLVER` in `.env` (or `Config.solver`) to one of:
+
+- `greedy`: first sum-10 rectangle in scan order, pairs preferred at first.
+- `smallest`: always the sum-10 rectangle that clears the fewest cells.
+- `beam` (default): plans the whole game with beam search (`Config.beam_width`,
+  `Config.beam_branching`); a wider beam plays better but takes longer before the first move.
+
 ## Swapping in a different solver
 
 Everything upstream of solving (capture, OCR) and downstream (execute) stays the
