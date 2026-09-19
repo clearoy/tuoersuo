@@ -3,4 +3,5 @@ from src.run import run
 
 if __name__ == "__main__":
     score = run(DEFAULT_CONFIG)
-    print(f"游戏结束，本次得分为{score}")
+    total = DEFAULT_CONFIG.rows * DEFAULT_CONFIG.cols
+    print(f"Game over. Cleared {score} of {total} cells.")

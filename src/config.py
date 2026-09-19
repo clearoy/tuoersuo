@@ -41,8 +41,8 @@ class Config:
     # Which solver plays: "greedy", "smallest" or "beam" (see src/pipeline/solve.py).
     # Larger beam_width / beam_branching plan better but take longer before the first move.
     solver: str = os.environ.get("SOLVER", "beam")
-    beam_width: int = 20
-    beam_branching: int = 6
+    beam_width: int = 200
+    beam_branching: int = 20
 
     # Mouse timing: the mini-program's webview needs real time between move/click/drag
     # to register input reliably. Increase these if moves still get missed.

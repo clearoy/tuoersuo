@@ -43,11 +43,11 @@ class Board:
             for j in range(y1, y2 + 1):
                 self.grid[i][j] = 0
 
-    def remaining_score(self) -> int:
-        return sum(self.grid[i][j] for i in range(1, self.rows + 1) for j in range(1, self.cols + 1))
+    def remaining_cells(self) -> int:
+        return sum(1 for i in range(1, self.rows + 1) for j in range(1, self.cols + 1) if self.grid[i][j])
 
     def is_solved(self) -> bool:
-        return self.remaining_score() == 0
+        return self.remaining_cells() == 0
 
     def show(self) -> None:
         for row in self.grid[1:]:

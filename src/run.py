@@ -22,7 +22,7 @@ def read_board(config: Config) -> tuple:
 
 
 def play(board: Board, tiles: list, geometry, config: Config, solver: Solver) -> int:
-    """Runs the solve/execute loop until no moves remain. Returns the final score."""
+    """Runs the solve/execute loop until no moves remain. Returns the number of cells cleared."""
     while True:
         move = solver.next_move(board)
         if move is None:
@@ -39,7 +39,7 @@ def play(board: Board, tiles: list, geometry, config: Config, solver: Solver) ->
         )
         board.clear(move.rect)
 
-    return config.rows * config.cols - board.remaining_score()
+    return config.rows * config.cols - board.remaining_cells()
 
 
 def run(config: Config, solver: Solver = None) -> int:

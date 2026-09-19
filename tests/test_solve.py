@@ -110,7 +110,14 @@ def test_beam_search_clears_at_least_as_much_as_smallest_first():
     play_out(SmallestFirstSolver(), smallest_board)
     play_out(BeamSearchSolver(beam_width=10, branching=4), beam_board)
 
-    assert beam_board.remaining_score() <= smallest_board.remaining_score()
+    assert beam_board.remaining_cells() <= smallest_board.remaining_cells()
+
+
+def test_remaining_cells_counts_cells_not_digit_values():
+    board = make_board(2, 2, [9, 9, 9, 9])  # digit values add up to 36, but only 4 cells
+    assert board.remaining_cells() == 4
+    board.clear((1, 1, 1, 2))
+    assert board.remaining_cells() == 2
 
 
 def test_beam_search_replans_when_board_changes_unexpectedly():
