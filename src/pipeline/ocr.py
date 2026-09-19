@@ -33,7 +33,11 @@ def recognize_board(image_path: str, rows: int, cols: int, api_key: str, model: 
             types.Part.from_bytes(data=image_bytes, mime_type="image/png"),
             prompt,
         ],
-        config=types.GenerateContentConfig(response_mime_type="application/json"),
+        config=types.GenerateContentConfig(
+            response_mime_type="application/json",
+            # No tools are used here; without this the SDK enables AFC by default and warns.
+            automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
+        ),
     )
 
     digits = json.loads(response.text)
