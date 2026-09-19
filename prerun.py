@@ -11,6 +11,9 @@ from src.config import CALIBRATION_PATH, DEFAULT_CONFIG
 from src.pipeline import capture
 
 
+MIN_BOARD_PIXELS = 300  # a 16x10 board can't be smaller than this in a screenshot
+
+
 def _is_board_pixel(rgb: tuple) -> bool:
     r, g, b = rgb[:3]
     if r > 200 and g > 200 and b > 200:  # white tile
@@ -53,6 +56,12 @@ if __name__ == "__main__":
         config.rows,
         config.cols,
     )
+    width, height = Image.open(image_path).size
+    if width < MIN_BOARD_PIXELS or height < MIN_BOARD_PIXELS:
+        raise SystemExit(
+            f"Captured image is only {width}x{height}px, too small to be the board - "
+            f"open the game and keep it visible, then re-run. Nothing was saved. (See {image_path}.)"
+        )
     top, left, bottom_margin, right_margin = detect_bounds(image_path)
 
     calibration = {

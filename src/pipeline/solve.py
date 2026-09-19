@@ -43,6 +43,11 @@ class Board:
             for j in range(y1, y2 + 1):
                 self.grid[i][j] = 0
 
+    def nonempty_cells(self, rect: tuple) -> list:
+        """(row, col) of every non-empty cell inside inclusive rect (x1, y1, x2, y2)."""
+        x1, y1, x2, y2 = rect
+        return [(i, j) for i in range(x1, x2 + 1) for j in range(y1, y2 + 1) if self.grid[i][j]]
+
     def remaining_cells(self) -> int:
         return sum(1 for i in range(1, self.rows + 1) for j in range(1, self.cols + 1) if self.grid[i][j])
 

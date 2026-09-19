@@ -43,4 +43,10 @@ def recognize_board(image_path: str, rows: int, cols: int, api_key: str, model: 
     digits = json.loads(response.text)
     if len(digits) != rows * cols:
         raise ValueError(f"Gemini returned {len(digits)} digits, expected {rows * cols}")
-    return [int(d) for d in digits]
+    digits = [int(d) for d in digits]
+    if not any(digits):
+        raise ValueError(
+            f"Gemini read the board as all zeros, so the screenshot probably isn't the game board. "
+            f"Open {image_path} to see what was captured."
+        )
+    return digits

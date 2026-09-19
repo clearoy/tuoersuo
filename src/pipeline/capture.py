@@ -41,27 +41,43 @@ class CaptureGeometry:
         return window_left + x / self.scale, window_top + full_image_y / self.scale
 
 
+# An app owns more than its main windows (menu-bar icon, splash logo, tooltips). Those are
+# tiny, and matching one of them captures a logo instead of the board.
+MIN_WINDOW_SIZE = 150  # screen points
+
+
 def get_window_bounds(window_title: str) -> tuple:
-    """Returns (left, top, width, height) of the first on-screen window whose owner
-    name or window title contains window_title."""
+    """Returns (left, top, width, height) of the frontmost on-screen window whose owner
+    name or window title contains window_title, ignoring windows too small to be the game."""
     windows = Quartz.CGWindowListCopyWindowInfo(
         Quartz.kCGWindowListExcludeDesktopElements | Quartz.kCGWindowListOptionOnScreenOnly,
         Quartz.kCGNullWindowID,
     )
+    too_small = []
     for window in windows:
         owner = window.get(Quartz.kCGWindowOwnerName, "") or ""
         name = window.get(Quartz.kCGWindowName, "") or ""
-        if window_title in owner or window_title in name:
-            bounds = window["kCGWindowBounds"]
-            return int(bounds["X"]), int(bounds["Y"]), int(bounds["Width"]), int(bounds["Height"])
-    raise RuntimeError(f"No window found with title '{window_title}'")
+        if window_title not in owner and window_title not in name:
+            continue
+        bounds = window["kCGWindowBounds"]
+        left, top, width, height = int(bounds["X"]), int(bounds["Y"]), int(bounds["Width"]), int(bounds["Height"])
+        if width < MIN_WINDOW_SIZE or height < MIN_WINDOW_SIZE:
+            too_small.append(f"{width}x{height}")
+            continue
+        return left, top, width, height
+
+    if too_small:
+        raise RuntimeError(
+            f"Only tiny '{window_title}' windows are on screen ({', '.join(too_small)}), "
+            "such as a menu-bar icon or splash logo. Open the game and keep the board visible."
+        )
+    raise RuntimeError(f"No window found with title '{window_title}'. Is the game open and visible?")
 
 
-def screenshot_board(window_title: str, crop_percent: float, image_path: str = "screenshot.png") -> tuple:
-    """Returns (image_path, CaptureGeometry)."""
+def grab_board(window_title: str, crop_percent: float) -> tuple:
+    """Returns (cropped board image, CaptureGeometry) without saving anything."""
     left, top, width, height = get_window_bounds(window_title)
     image = pyautogui.screenshot(region=(left, top, width, height))
-    image.save(image_path, "PNG")
 
     scale = image.width / width  # screenshot pixels per screen point (2.0 on Retina)
 
@@ -69,9 +85,15 @@ def screenshot_board(window_title: str, crop_percent: float, image_path: str = "
     kept_height = int(full_height * crop_percent)
     crop_offset_y = full_height - kept_height
     cropped = image.crop((0, crop_offset_y, image.width, full_height))
-    cropped.save(image_path)
 
-    return image_path, CaptureGeometry(crop_offset_y=crop_offset_y, scale=scale)
+    return cropped, CaptureGeometry(crop_offset_y=crop_offset_y, scale=scale)
+
+
+def screenshot_board(window_title: str, crop_percent: float, image_path: str = "screenshot.png") -> tuple:
+    """Returns (image_path, CaptureGeometry)."""
+    image, geometry = grab_board(window_title, crop_percent)
+    image.save(image_path, "PNG")
+    return image_path, geometry
 
 
 def compute_tile_positions(

@@ -43,6 +43,11 @@ python main.py
 
 Re-run `prerun.py` whenever the game window's size or position changes.
 
+After each drag the bot checks the screen that the tiles really disappeared. If a move
+cleared nothing it retries once more slowly, logs which move it was, and if that fails too
+it stops and saves `failed_move.png` (expected tiles boxed in red). Turn this off with
+`Config.verify_moves = False`.
+
 ## Test
 
 ```bash

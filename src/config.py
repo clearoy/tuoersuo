@@ -50,5 +50,10 @@ class Config:
     drag_duration: float = 0.15
     settle_delay: float = 0.08
 
+    # After each drag, check the screen that the tiles really disappeared; if not, retry
+    # once at a slower speed and stop with diagnostics if it still doesn't clear.
+    verify_moves: bool = True
+    verify_timeout: float = 0.6
+
 
 DEFAULT_CONFIG = Config()
