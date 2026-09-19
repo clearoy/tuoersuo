@@ -6,21 +6,37 @@ from src.pipeline.solve import Board, Solver, GreedySolver
 
 
 def read_board(config: Config) -> tuple:
-    image_path, tiles = capture.capture(config.window_title, config.capture_crop_percent, config.rows, config.cols)
+    image_path, tiles, geometry = capture.capture(
+        config.window_title,
+        config.capture_crop_percent,
+        config.rows,
+        config.cols,
+        config.board_begin_position,
+        config.board_end_margin,
+    )
 
     digits = ocr.recognize_board(image_path, config.rows, config.cols, config.gemini_api_key, config.gemini_model)
 
     board = Board.from_digits(digits, config.rows, config.cols)
-    return board, tiles
+    return board, tiles, geometry
 
 
-def play(board: Board, tiles: list, config: Config, solver: Solver) -> int:
+def play(board: Board, tiles: list, geometry, config: Config, solver: Solver) -> int:
     """Runs the solve/execute loop until no moves remain. Returns the final score."""
     while True:
         move = solver.next_move(board)
         if move is None:
             break
-        execute.execute_move(config.window_title, tiles, move, config.cols)
+        execute.execute_move(
+            config.window_title,
+            tiles,
+            move,
+            config.cols,
+            geometry,
+            move_duration=config.move_duration,
+            drag_duration=config.drag_duration,
+            settle_delay=config.settle_delay,
+        )
         board.clear(move.rect)
 
     return config.rows * config.cols - board.remaining_score()
@@ -28,6 +44,6 @@ def play(board: Board, tiles: list, config: Config, solver: Solver) -> int:
 
 def run(config: Config, solver: Solver = None) -> int:
     solver = solver or GreedySolver()
-    board, tiles = read_board(config)
+    board, tiles, geometry = read_board(config)
     board.show()
-    return play(board, tiles, config, solver)
+    return play(board, tiles, geometry, config, solver)

@@ -37,8 +37,11 @@ Screen Recording and Accessibility permissions in System Settings > Privacy & Se
 ## Run
 
 ```bash
+python prerun.py   # captures the window, measures the board, saves calibration.json
 python main.py
 ```
+
+Re-run `prerun.py` whenever the game window's size or position changes.
 
 ## Test
 

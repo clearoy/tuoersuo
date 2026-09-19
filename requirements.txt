@@ -1,5 +1,5 @@
 pyautogui
-pygetwindow
+pyobjc-framework-Quartz; sys_platform == "darwin"
 Pillow
 google-genai
 python-dotenv
